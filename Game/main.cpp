@@ -50,7 +50,7 @@ int main(int argc,char *argv[])
 	scn->RemoveShader();
 
 	//--BOTTOM-LEFT IMAGE
-	scn->AddShader("../res/shaders/basicShader_grayscale"); //placeholder shader
+	scn->AddShader("../res/shaders/basicShader_halftone"); //placeholder shader
 	scn->SetShapeTex(0, 2);
 	scn->Draw(1, 2, scn->BACK, false, false);
 	scn->RemoveShader();
