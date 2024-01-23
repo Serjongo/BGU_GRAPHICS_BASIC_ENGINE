@@ -15,10 +15,10 @@
 
 	Scene::Scene()
 	{
-		//
+
 		glLineWidth(5);
 	
-		cameras.push_back(new Camera(60.0f,1.0,0.1f,100.0f));		
+		cameras.push_back(new Camera(60.0f,1.0,0.1f,100.0f));
 		pickedShape = -1;
 		depth = 0;
 		cameraIndx = 0;
@@ -30,7 +30,11 @@
 	Scene::Scene(float angle,float relationWH,float near1, float far1)
 	{
 		//glLineWidth(5);
-		cameras.push_back(new Camera(angle,relationWH,near1,far1));
+		//s:adding cameras
+		cameras.push_back(new Camera(angle, relationWH,near1,far1));
+		cameras.push_back(new Camera(angle, relationWH, near1, far1));
+		cameras.push_back(new Camera(angle, relationWH, near1, far1));
+		cameras.push_back(new Camera(angle, relationWH, near1, far1));
 		pickedShape = -1;
 		depth = 0;
 		cameraIndx = 0;
@@ -62,9 +66,19 @@
 		shaders.push_back(new Shader(fileName));
 	}
 
+	void Scene::RemoveShader() //s: my function, this does the reverse of adding, I pop it back out
+	{
+		shaders.pop_back();
+	}
+
 	void Scene::AddTexture(const std::string& textureFileName,bool for2D)
 	{
 		textures.push_back(new Texture(textureFileName));
+	}
+
+	void Scene::AddTexture(const std::string& textureFileName, bool for2D, int filter_num)
+	{
+		textures.push_back(new Texture(textureFileName, filter_num));
 	}
 
 	void Scene::AddTexture(int width,int height, unsigned char *data)
@@ -81,20 +95,49 @@
 	void Scene::Draw(int shaderIndx,int cameraIndx,int buffer,bool toClear,bool debugMode)
 	{
 		glEnable(GL_DEPTH_TEST);
+		
 		glm::mat4 Normal = MakeTrans();
 	
 		glm::mat4 MVP = cameras[cameraIndx]->GetViewProjection()*glm::inverse(cameras[cameraIndx]->MakeTrans());
 		int p = pickedShape;
+
+		//s:these are my 4 povs
+		if(cameraIndx == 0)
+		{
+			//cameras[0]->SetProjection(cameras[0]->GetAngle(), 1);
+			glScissor(0, 256, 256, 256);
+			glViewport(0, 256, 256, 256);
+
+		}
+		if (cameraIndx == 1)
+		{
+			//cameras[1]->SetProjection(cameras[1]->GetAngle(), 1);
+			glScissor(256, 256, 256, 256);
+			glViewport(256, 256, 256, 256);
+
+		}
+		if (cameraIndx == 2)
+		{
+			glScissor(0, 0, 256, 256);
+			glViewport(0, 0, 256, 256);
+		}
+		if (cameraIndx == 3)
+		{
+			glScissor(256, 0, 256, 256);
+			glViewport(256, 0, 256, 256);
+		}
+
 		if(toClear)
 		{
 			if(shaderIndx>0)
-				Clear(1,0,1,1);
+				Clear(1,1,1,1); //s:edited clear flags to clear out everything, as pointed in PS3
 			else
 				Clear(0,0,0,0);
 		}
 
 		for (unsigned int i=0; i<shapes.size();i++)
 		{
+			//std::cout << shapes.size() << std::endl;
 			if(shapes[i]->Is2Render())
 			{
 				glm::mat4 Model = Normal * shapes[i]->MakeTrans();

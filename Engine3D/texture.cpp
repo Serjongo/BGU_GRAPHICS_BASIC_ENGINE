@@ -27,6 +27,36 @@ Texture::Texture(const std::string& fileName)
     stbi_image_free(data);
 }
 
+//s:custom constructor for our filters, ADDED.
+Texture::Texture(const std::string& fileName,int filter_num)
+{
+    int width, height, numComponents;
+    unsigned char* data = stbi_load((fileName).c_str(), &width, &height, &numComponents, 4);
+
+    if (data == NULL)
+        std::cerr << "Unable to load texture: " << fileName << std::endl;
+
+    glGenTextures(1, &m_texture);
+    Bind(m_texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.4f);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if(filter_num == 1)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    }
+    else 
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    }
+    
+    stbi_image_free(data);
+}
+
 Texture::Texture(int width,int height,unsigned char *data)
 {
     glGenTextures(1, &m_texture);

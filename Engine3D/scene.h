@@ -24,7 +24,9 @@ public:
 	void AddShapeCopy(int indx,int parent,unsigned int mode);
 	
 	void AddShader(const std::string& fileName);
+	void Scene::RemoveShader(); //ADDED
 	void AddTexture(const std::string& textureFileName, bool for2D);
+	void AddTexture(const std::string& textureFileName, bool for2D, int filter_num); //ADDED
 	void AddTexture(int width,int height, unsigned char *data);
 
 	void AddCamera(glm::vec3& pos , float fov, float relationWH, float zNear, float zFar);

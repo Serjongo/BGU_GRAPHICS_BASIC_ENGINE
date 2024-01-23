@@ -9,6 +9,8 @@ class Texture
 public:
 	Texture(const std::string& fileName);
 	Texture(int width, int height,unsigned char *data);
+	//s:custom constructor for our filters - declaration
+	Texture::Texture(const std::string& fileName, int filter_num);
 	void Bind(int slot);
 	inline int GetSlot(){return m_texture;}
 	 ~Texture();
