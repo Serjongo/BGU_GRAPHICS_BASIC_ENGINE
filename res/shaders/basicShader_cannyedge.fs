@@ -54,13 +54,30 @@ void main()
 	);
 
 	int sobel_index = 0; //to iterate over the kernel
+	vec3 Gx = vec3(0,0,0);
+	vec3 Gy = vec3(0,0,0);
 	for(int i = -1; i <= 1; i++) // -1, 0, 1 cells, with 0 being center
 	{
-		for(int j = -1; j <= 1; j++,kernel_index++)
+		for(int j = -1; j <= 1; j++,sobel_index++)
 		{
-			colorSum += texture(sampler, texCoord0 + vec2(float(i),float(j)) * texelSize).rgb * kernel[kernel_index];
+			Gx += texture(sampler, texCoord0 + vec2(float(i),float(j)) * texelSize).rgb * sobelX[sobel_index];
 		}
 	}
+	sobel_index = 0;
+	for(int i = -1; i <= 1; i++) // -1, 0, 1 cells, with 0 being center
+	{
+		for(int j = -1; j <= 1; j++,sobel_index++)
+		{
+			Gy += texture(sampler, texCoord0 + vec2(float(i),float(j)) * texelSize).rgb * sobelY[sobel_index];
+		}
+	}
+	float magnitude = sqrt(dot(Gx,Gx)+dot(Gy,Gy));
+	fragColor = vec4(vec3(magnitude),1.0); //you must have gl_FragColor
+
+	//2. Non-maximum suppression to thin the edges
+	//float gradient_direction = atan(Gy,Gx);
+	
+
 	
 
 
