@@ -56,7 +56,7 @@ int main(int argc,char *argv[])
 	scn->RemoveShader();
 
 	//--BOTTOM-RIGHT IMAGE
-	scn->AddShader("../res/shaders/basicShader"); //placeholder shader
+	scn->AddShader("../res/shaders/basicShader_floydsteinberg"); //placeholder shader
 	scn->SetShapeTex(0, 3);
 	scn->Draw(1, 3, scn->BACK, false, false);
 	scn->RemoveShader();
