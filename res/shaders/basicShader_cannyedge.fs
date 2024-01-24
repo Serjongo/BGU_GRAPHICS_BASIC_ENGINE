@@ -40,6 +40,8 @@ void main()
 
 
 	//2. intensity gradient
+	//NOTE FOR SELF - DO NOTE THAT I'M USING VEC3 FOR GX AND GY, CONSIDERING MAYBE CHANGING THEM TO FLOAT
+	//AND PROCESS THE IMAGE IN A SINGLE CHANNEL, FOR NOW I KEEP IT AS IS
 	float sobelX[9] = float[9]
 	(
 		-1.0 , 0.0 , +1.0,
@@ -71,16 +73,83 @@ void main()
 			Gy += texture(sampler, texCoord0 + vec2(float(i),float(j)) * texelSize).rgb * sobelY[sobel_index];
 		}
 	}
-	float magnitude = sqrt(dot(Gx,Gx)+dot(Gy,Gy));
+	float magnitude = sqrt(dot(Gx.x,Gx.x)+dot(Gy.y,Gy.y)); //should probably change it to Gy.x too.
 	fragColor = vec4(vec3(magnitude),1.0); //you must have gl_FragColor
 
 	//2. Non-maximum suppression to thin the edges
-	//float gradient_direction = atan(Gy,Gx);
-	
+	float gradient_direction_radians = atan(Gy.y,Gx.x);
+	float pi = 3.14159;
+	float gradient_direction_degrees = (gradient_direction_radians * 180 / pi); // % 360 modulo of 360 degrees
+	vec2 neighbour_1 = vec2(0,0);
+	vec2 neighbour_2 = vec2(0,0); //this will always be the negative of neighbour 1
+	float current_fragment = vec4(vec3(magnitude),1.0).r; // I know that this makes little sense since I could simply equate it to magnitude, but I made it a point to copy the latest result of fragColor
 
-	
+	//checking for the gradient direction to take neighbours to compare my pixel to
+	if ((gradient_direction_degrees >= -22.5) && (gradient_direction_degrees <= 22.5) )
+	{
+		neighbour_1 = vec2(1,0);
+	} 
+	else if ((gradient_direction_degrees > 22.5) && (gradient_direction_degrees <= 67.5) )
+	{
+		neighbour_1 = vec2(1,1);
+	} 
+	else if ((gradient_direction_degrees > 67.5) && (gradient_direction_degrees <= 112.5) )
+	{
+		neighbour_1 = vec2(0,1);
+	}
+	else if ((gradient_direction_degrees > 112.5) && (gradient_direction_degrees <= 157.5) )
+	{
+		neighbour_1 = vec2(-1,1);
+	}
+	//technically it can only go up to 180 but whatever
+	else if ((gradient_direction_degrees > 157.5) && (gradient_direction_degrees <= 202.5) ) 
+	{
+		neighbour_1 = vec2(-1,0);
+	}
+	//going to the negatives
+	else if ((gradient_direction_degrees < -22.5) && (gradient_direction_degrees >= -67.5) )
+	{
+		neighbour_1 = vec2(1,-1);
+	}
+	else if ((gradient_direction_degrees < -67.5) && (gradient_direction_degrees >= -112.5) )
+	{
+		neighbour_1 = vec2(0,-1);
+	}
+	else if ((gradient_direction_degrees < -112.5) && (gradient_direction_degrees >= -157.5) )
+	{
+		neighbour_1 = vec2(-1,-1);
+	}
+	else if ((gradient_direction_degrees < -157.5) && (gradient_direction_degrees >= -202.5) )
+	{
+		neighbour_1 = vec2(-1,0);
+	}
+	neighbour_2 = -neighbour_1;
+
+	if ((current_fragment < texture(sampler, texCoord0 + neighbour_1 * texelSize).r) 
+	|| (current_fragment < texture(sampler, texCoord0 + neighbour_2 * texelSize).r) )
+	{
+		current_fragment = 0.0;
+		//fragColor = vec4(vec3(texture(sampler, texCoord0).r),1.0);
+	}
+	fragColor = vec4(vec3(current_fragment),1.0);
+
+	//4.Double thresholding
+	float high_threshold = 0.7;
+	float low_threshold = 0.4;
+	float threshold_curr_fragment = 0.0;
+
+	if(magnitude >= high_threshold)
+	{
+		threshold_curr_fragment = 1.0;
+	}
+	else if(magnitude >= low_threshold) //weak edge
+	{
+		threshold_curr_fragment = 0.5;
+	}
+
+	fragColor = vec4(vec3(threshold_curr_fragment),1.0);
 
 
-
+	//texture(sampler, texCoord0 + neighbour_1 * texelSize).rgb * sobelX[sobel_index];
 
 }
