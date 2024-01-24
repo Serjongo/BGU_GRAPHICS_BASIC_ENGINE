@@ -76,7 +76,7 @@ void main()
 	float magnitude = sqrt(dot(Gx.x,Gx.x)+dot(Gy.y,Gy.y)); //should probably change it to Gy.x too.
 	fragColor = vec4(vec3(magnitude),1.0); //you must have gl_FragColor
 
-	//2. Non-maximum suppression to thin the edges
+	//3. Non-maximum suppression to thin the edges
 	float gradient_direction_radians = atan(Gy.y,Gx.x);
 	float pi = 3.14159;
 	float gradient_direction_degrees = (gradient_direction_radians * 180 / pi); // % 360 modulo of 360 degrees
@@ -134,8 +134,8 @@ void main()
 	fragColor = vec4(vec3(current_fragment),1.0);
 
 	//4.Double thresholding
-	float high_threshold = 0.7;
-	float low_threshold = 0.4;
+	float high_threshold = 0.6; // WHITE edge. may change these values
+	float low_threshold = 0.4;	// GRAY edge
 	float threshold_curr_fragment = 0.0;
 
 	if(magnitude >= high_threshold)
@@ -144,12 +144,33 @@ void main()
 	}
 	else if(magnitude >= low_threshold) //weak edge
 	{
-		threshold_curr_fragment = 0.5;
+		threshold_curr_fragment = 0.5; // weak edge val, hardcoded
 	}
 
 	fragColor = vec4(vec3(threshold_curr_fragment),1.0);
 
 
-	//texture(sampler, texCoord0 + neighbour_1 * texelSize).rgb * sobelX[sobel_index];
+	//5. Hysteresis - looking to integrate our weak edges to our strong edges
+	//since we are only doing a small, static picture, I will not bother with attempting to optimize this one by marking out traversed pixels
+
+	if (threshold_curr_fragment == 0.5) //meaning we are a weak edge
+	{
+		for(int i = -1; i <= 1; i++) // -1, 0, 1 cells, with 0 being center
+		{
+			for(int j = -1; j <= 1; j++)
+			{
+				//do note that we're pointlessely going over 0,0 which is ourselves. It does not affect us
+				if(texture(sampler, texCoord0 + vec2(float(i),float(j)) * texelSize).r >= high_threshold) //checking if hysteresis neighbour is a strong edge
+				{
+					fragColor = vec4(vec3(1.0),1.0);
+				}
+			}
+		}
+		//somewhat of a spaghetti code, but essentially, if we haven't been made strong inside the loop - we're not a strong edge neighbour, so we paint ourselves black
+		if(fragColor != vec4(vec3(1.0),1.0))
+		{
+			fragColor = vec4(vec3(0.0),1.0);
+		}
+	}
 
 }

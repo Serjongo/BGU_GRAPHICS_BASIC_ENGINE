@@ -30,7 +30,7 @@ void Game::Init()
 	
 	//s: changed texture to the one included in the project, and added 4 instances of it
 	AddTexture("../res/textures/lena256.jpg",false); // top-left
-	AddTexture("../res/textures/lena256.jpg", false, 1); //top-right
+	AddTexture("../res/textures/lena256.jpg", false); //top-right
 	AddTexture("../res/textures/lena256.jpg", false); //bottom-left
 	AddTexture("../res/textures/lena256.jpg", false); //bottom-right
 
