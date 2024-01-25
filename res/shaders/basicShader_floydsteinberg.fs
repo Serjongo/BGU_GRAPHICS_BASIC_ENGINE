@@ -11,5 +11,8 @@ uniform vec4 lightDirection;
 out vec4 fragColor;
 void main()
 {
-	fragColor = texture(sampler, texCoord0)* vec4(color0,1.0); //you must have gl_FragColor
+	vec4 texColor = texture(sampler, texCoord0);
+    float grayscale = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
+    float quantized = floor(grayscale * 16.0) / 16.0;
+    fragColor = vec4(vec3(quantized), 1.0);
 }
