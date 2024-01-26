@@ -37,6 +37,7 @@ int main(int argc,char *argv[])
 	//pushing shader for image
 	scn->AddShader("../res/shaders/basicShader");
 	//settting texture on shape
+	scn->ReadPixel();
 	scn->SetShapeTex(0, 0);
 	//drawing image
 	scn->Draw(1, 0, scn->BACK, true, false);
@@ -44,19 +45,21 @@ int main(int argc,char *argv[])
 	scn->RemoveShader();
 
 	//--TOP-RIGHT IMAGE
-	scn->AddShader("../res/shaders/basicShader_cannyedge"); //placeholder shader
+	scn->AddShader("../res/shaders/basicShader_cannyedge"); //my canny edge detector
 	scn->SetShapeTex(0, 1);
 	scn->Draw(1, 1, scn->BACK, false, false);
 	scn->RemoveShader();
 
 	//--BOTTOM-LEFT IMAGE
-	scn->AddShader("../res/shaders/basicShader_halftone"); //placeholder shader
+	scn->AddShader("../res/shaders/basicShader"); //half tone
+	//GLubyte *data = (GLubyte*)malloc(256 * 256 * 4 * 2);
+	//glReadPixels(1, 1, 256, 256, GL_DEPTH_COMPONENT, GL_FLOAT, &data);
 	scn->SetShapeTex(0, 2);
 	scn->Draw(1, 2, scn->BACK, false, false);
 	scn->RemoveShader();
 
 	//--BOTTOM-RIGHT IMAGE
-	scn->AddShader("../res/shaders/basicShader_floydsteinberg"); //placeholder shader
+	scn->AddShader("../res/shaders/basicShader"); //placeholder shader
 	scn->SetShapeTex(0, 3);
 	scn->Draw(1, 3, scn->BACK, false, false);
 	scn->RemoveShader();

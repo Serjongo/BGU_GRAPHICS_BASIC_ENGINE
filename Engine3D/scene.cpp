@@ -114,6 +114,7 @@
 			//cameras[1]->SetProjection(cameras[1]->GetAngle(), 1);
 			glScissor(256, 256, 256, 256);
 			glViewport(256, 256, 256, 256);
+			
 
 		}
 		if (cameraIndx == 2)
