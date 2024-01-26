@@ -5,6 +5,7 @@
 #include "stb_image.h"
 #include "../res/includes/glad/include/glad/glad.h"
 #include <iostream>
+#include <fstream> //added by me
 
 Texture::Texture(const std::string& fileName)
 {
@@ -27,6 +28,7 @@ Texture::Texture(const std::string& fileName)
     stbi_image_free(data);
 }
 
+//wrote this one, it simply clamps our values between 0 - 255
 unsigned char clamp(unsigned char val) 
 {
     if (val < 0) return 0;
@@ -55,7 +57,7 @@ Texture::Texture(const std::string& fileName,int filter_num)
     if(filter_num == 1) //floyd-steinberg
     {
         //EXTREMELY INNEFICIENT CODE - but I'm working on a static image so whatever
-        //grayscale, really irrelevant, just did it to test other pictures
+        //grayscale, REALLY IRRELEVANT, just did it to test other pictures
         for (int i = 0 ; i < width ; i++)
         {
             for (int j = 0; j < height; j++)
@@ -135,6 +137,19 @@ Texture::Texture(const std::string& fileName,int filter_num)
                     // 1/16 PIXEL END ---
                 }
             }
+        }
+
+
+        //printing our results
+        std::ofstream myfile;
+        myfile.open("floyd_steinberg.txt");
+        for (int j = 0; j < height; j++)
+        {
+            for (int i = 0; i < width; i++) //[x,y]
+            {
+                myfile << int(data[(i * 4) + (j * 4 * width)]) << " "; //I'm always printing out the R value of the RGBA, they should be the same though
+            }
+            myfile << "\n";
         }
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -246,7 +261,36 @@ Texture::Texture(const std::string& fileName,int filter_num)
             }
         }
 
+        //printing our results
+        std::ofstream myfile;
+        myfile.open("half-tone.txt");
+        for (int j = 0; j < height; j++)
+        {
+            for (int i = 0; i < width; i++) //[x,y]
+            {
+                myfile << int(new_data[(i * 4) + (j * 4 * new_width)]) << " "; //I'm always printing out the R value of the RGBA, they should be the same though
+            }
+            myfile << "\n";
+        }
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, new_width, new_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, new_data);
+        stbi_image_free(new_data);
+    }
+
+    else if (filter_num == 3) // canny_edge, im only printing the results here since all of the work is done in the fragment shader
+    {
+        //printing our results
+        std::ofstream myfile;
+        myfile.open("canny_edge.txt");
+        for (int j = 0; j < height; j++)
+        {
+            for (int i = 0; i < width; i++) //[x,y]
+            {
+                myfile << int(data[(i * 4) + (j * 4 * width)]) << " "; //I'm always printing out the R value of the RGBA, they should be the same though
+            }
+            myfile << "\n";
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     }
     else 
     {
