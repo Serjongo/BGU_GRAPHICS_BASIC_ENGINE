@@ -15,14 +15,20 @@ void main()
 {
 	const float resX= 512.0;
 	const float resY= 512.0;
-	vec2 texelSize = 1.0/vec2(resX,resY); //texture pixel size
+	vec2 resjump = 1.0/vec2(resX,resY); //since in shaders values are normalized
 	vec3 colorSum = vec3(0.0);
 
 	//constants for gaussian blur, notice that it is hardcoded for 3x3
-	float kernel[9] = float[9](
-		1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0,
-		2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0,
-		1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0
+	//float kernel_normal[9] = float[9]
+	//(
+	//	1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0,
+	//	2.0 / 16.0, 4.0 / 16.0, 2.0 / 16.0,
+	//	1.0 / 16.0, 2.0 / 16.0, 1.0 / 16.0
+	//);
+	//what I did here is transposing the operator so it fits my loop iterations, otherwise I'd have to play with the loops further
+	float kernel[9] = float[9]
+	(
+		1.0 / 16.0,2.0 / 16.0,1.0 / 16.0, 2.0 / 16.0,4.0 / 16.0,2.0 / 16.0,1.0 / 16.0,2.0 / 16.0,1.0 / 16.0
 	);
 	//canny edge detector steps:
 	//1. gaussian blur - hardcoded for 3 by 3
@@ -32,7 +38,7 @@ void main()
 	{
 		for(int j = -1; j <= 1; j++,kernel_index++)
 		{
-			colorSum += texture(sampler, texCoord0 + vec2(float(i),float(j)) * texelSize).rgb * kernel[kernel_index];
+			colorSum += texture(sampler, texCoord0 + vec2(float(i),float(j)) * resjump).rgb * kernel[kernel_index];
 		}
 	}
 	//kernel size
@@ -40,19 +46,31 @@ void main()
 
 
 	//2. intensity gradient
-	//NOTE FOR SELF - DO NOTE THAT I'M USING VEC3 FOR GX AND GY, CONSIDERING MAYBE CHANGING THEM TO FLOAT
+	//NOTE TO SELF - DO NOTE THAT I'M USING VEC3 FOR GX AND GY, CONSIDERING MAYBE CHANGING THEM TO FLOAT
 	//AND PROCESS THE IMAGE IN A SINGLE CHANNEL, FOR NOW I KEEP IT AS IS
+	//float normal_sobelX[9] = float[9]
+	//(
+	//	-1.0 , 0.0 , +1.0,
+	//	-2.0 , 0.0 , +2.0,
+	//	-1.0 , 0.0 , +1.0
+	//);
+
+	//what I did here is transposing the operator so it fits my loop iterations, otherwise I'd have to play with the loops further
 	float sobelX[9] = float[9]
 	(
-		-1.0 , 0.0 , +1.0,
-		-2.0 , 0.0 , +2.0,
-		-1.0 , 0.0 , +1.0
+		-1.0,-2.0,-1.0,0.0,0.0,0.0,+1.0,+2.0,+1.0
 	);
-	float sobelY[9] = float[9]
+
+	float normal_sobelY[9] = float[9]
 	(
 		-1.0 , -2.0 , -1.0,
 		0.0 , 0.0 , 0.0,
 		+1.0 , +2.0 , +1.0
+	);
+
+	float sobelY[9] = float[9]
+	(
+		+1.0,0.0,-1.0,+2.0,0.0,-2.0,+1.0,0.0,-1.0
 	);
 
 	int sobel_index = 0; //to iterate over the kernel
@@ -62,7 +80,7 @@ void main()
 	{
 		for(int j = -1; j <= 1; j++,sobel_index++)
 		{
-			Gx += texture(sampler, texCoord0 + vec2(float(i),float(j)) * texelSize).rgb * sobelX[sobel_index];
+			Gx += texture(sampler, texCoord0 + vec2(float(i),float(j)) * resjump).rgb * sobelX[sobel_index];
 		}
 	}
 	sobel_index = 0;
@@ -70,14 +88,14 @@ void main()
 	{
 		for(int j = -1; j <= 1; j++,sobel_index++)
 		{
-			Gy += texture(sampler, texCoord0 + vec2(float(i),float(j)) * texelSize).rgb * sobelY[sobel_index];
+			Gy += texture(sampler, texCoord0 + vec2(float(i),float(j)) * resjump).rgb * sobelY[sobel_index];
 		}
 	}
 	float magnitude = sqrt(dot(Gx.x,Gx.x)+dot(Gy.y,Gy.y)); //should probably change it to Gy.x too.
 	fragColor = vec4(vec3(magnitude),1.0); //you must have gl_FragColor
 
 	//3. Non-maximum suppression to thin the edges
-	float gradient_direction_radians = atan(Gy.y,Gx.x);
+	float gradient_direction_radians = atan(Gy.x,Gx.x);
 	float pi = 3.14159;
 	float gradient_direction_degrees = (gradient_direction_radians * 180 / pi); // % 360 modulo of 360 degrees
 	vec2 neighbour_1 = vec2(0,0);
@@ -125,8 +143,8 @@ void main()
 	}
 	neighbour_2 = -neighbour_1;
 
-	if ((current_fragment < texture(sampler, texCoord0 + neighbour_1 * texelSize).r) 
-	|| (current_fragment < texture(sampler, texCoord0 + neighbour_2 * texelSize).r) )
+	if ((current_fragment < texture(sampler, texCoord0 + neighbour_1 * resjump).r) 
+	|| (current_fragment < texture(sampler, texCoord0 + neighbour_2 * resjump).r) )
 	{
 		current_fragment = 0.0;
 		//fragColor = vec4(vec3(texture(sampler, texCoord0).r),1.0);
@@ -160,7 +178,7 @@ void main()
 			for(int j = -1; j <= 1; j++)
 			{
 				//do note that we're pointlessely going over 0,0 which is ourselves. It does not affect us
-				if(texture(sampler, texCoord0 + vec2(float(i),float(j)) * texelSize).r >= high_threshold) //checking if hysteresis neighbour is a strong edge
+				if(texture(sampler, texCoord0 + vec2(float(i),float(j)) * resjump).r >= high_threshold) //checking if hysteresis neighbour is a strong edge
 				{
 					fragColor = vec4(vec3(1.0),1.0);
 				}
